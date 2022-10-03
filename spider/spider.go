@@ -28,68 +28,44 @@ func LoginGetElec(wd selenium.WebDriver) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		err = wd.Get("http://one.hust.edu.cn")
+		if err != nil {
+			return "", err
+		}
 		err = wd.Get("http://sdhq.hust.edu.cn/icbs/hust/html/index.html")
 		if err != nil {
 			return "", err
 		}
-		title, err := wd.Title()
-		if err != nil {
-			return "", err
-		}
-		if title == "水电收费平台" {
-			break
-		}
-		fmt.Println("登录失败,重新登录...")
-		ocrResult = ""
-	}
-	if maxRetryCnt <= 0 {
-		return "", fmt.Errorf("登录失败次数过多")
-	}
-	log.Println("开启go routine,获取电费信息...")
-	ch := make(chan string)
-	go func() {
-		for {
+		var elecResult string
+		err = wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 			elecValueElement, err := wd.FindElement(selenium.ByCSSSelector, ".AmValue")
 			if err != nil {
-				continue
+				return false, nil
 			}
-			elecResult, err := elecValueElement.Text()
+			elecResult, err = elecValueElement.Text()
 			if err != nil {
-				continue
+				return false, nil
 			}
-			ch <- elecResult
+			return elecResult != "", nil
+		}, time.Second*5)
+		if err != nil {
+			continue
 		}
-	}()
-	select {
-	case <-time.After(time.Second * 5):
-		return "", fmt.Errorf("获取电费信息超时")
-	case elecResult := <-ch:
 		return elecResult, nil
 	}
+	return "", fmt.Errorf("登录失败次数过多")
 }
 
 func Login(wd selenium.WebDriver, ocrResult string) error {
-	ch := make(chan selenium.WebElement)
-	go func() {
-		var usernameElement selenium.WebElement
-		for {
-			element, err := wd.FindElement(selenium.ByCSSSelector, "#un")
-			if err == nil {
-				usernameElement = element
-				break
-			}
-			fmt.Println("找不到#un,重试...")
-		}
-		fmt.Println("找到#un")
-		ch <- usernameElement
-	}()
-	fmt.Println("开启go routine,等待登录页面加载...")
 	var usernameElement selenium.WebElement
-	select {
-	case <-time.After(time.Second * 5):
-		return fmt.Errorf("寻找#un超时")
-	case usernameElement = <-ch:
-	}
+	_ = wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
+		element, err := wd.FindElement(selenium.ByCSSSelector, "#un")
+		if err == nil {
+			usernameElement = element
+			return true, nil
+		}
+		return false, nil
+	}, time.Second*5)
 	err := usernameElement.SendKeys(config.GlobalConfig.Username)
 	if err != nil {
 		return err
