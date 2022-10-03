@@ -2,41 +2,34 @@ package main
 
 import (
 	"fmt"
-	"github.com/tebeka/selenium"
-	"github.com/tebeka/selenium/chrome"
 	"hust-pass/config"
+	"hust-pass/sms"
 	"hust-pass/spider"
 	"log"
+	"strconv"
 	"time"
+
+	"github.com/robfig/cron/v3"
+	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 )
 
 func main() {
 	err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
-	now := time.Now()
-	//在后台启动一个ChromeDriver实例
-	service, err := selenium.NewChromeDriverService(config.GlobalConfig.ChromeDriverPath,
-		config.GlobalConfig.ChromeDriverServicePort, []selenium.ServiceOption{}...)
+	ElecTask()
+	log.Println("开启定时任务...")
+	crontab := cron.New()
+	_, err = crontab.AddFunc("0 0,8,16 * * *", ElecTask)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	defer service.Stop()
-	wd, err := InitWebDriver()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer wd.Quit()
-	elec, err := spider.LoginGetElec(wd)
-	if err != nil {
-		log.Println("出错:", err)
-		return
-	}
-	fmt.Println("电费:", elec)
-	fmt.Println("运行时长:", time.Now().Sub(now).Seconds())
+	// 启动定时器 定时任务是另起协程执行的
+	crontab.Start()
+	select {}
 }
 
 func InitWebDriver() (selenium.WebDriver, error) {
@@ -65,4 +58,52 @@ func InitWebDriver() (selenium.WebDriver, error) {
 		return nil, err
 	}
 	return wd, nil
+}
+
+func ElecTask() {
+	now := time.Now()
+	//在后台启动一个ChromeDriver实例
+	service, err := selenium.NewChromeDriverService(config.GlobalConfig.ChromeDriverPath,
+		config.GlobalConfig.ChromeDriverServicePort, []selenium.ServiceOption{}...)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer func(service *selenium.Service) {
+		err := service.Stop()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(service)
+	wd, err := InitWebDriver()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(wd selenium.WebDriver) {
+		err := wd.Quit()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(wd)
+	elec, err := spider.LoginGetElec(wd)
+	if err != nil {
+		log.Println("出错:", err)
+		return
+	}
+	fmt.Println("电费:", elec)
+	fmt.Println("运行时长:", time.Now().Sub(now).Seconds())
+	elecNumber, err := strconv.ParseFloat(elec, 64)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if elecNumber < config.GlobalConfig.ElecThreshold {
+		client := sms.InitClient()
+		err = client.Send(config.GlobalConfig.PhoneNumber,
+			[]string{config.GlobalConfig.RoomID, elec})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 }
