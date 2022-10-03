@@ -3,11 +3,12 @@ package ocr
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/imroc/req"
 	"image/gif"
 	"image/jpeg"
 	"io/ioutil"
 	"os"
+
+	"github.com/imroc/req"
 )
 
 func WriteJPEG(gifPath string, JPEGPath string) error {

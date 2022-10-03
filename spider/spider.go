@@ -2,14 +2,15 @@ package spider
 
 import (
 	"fmt"
-	"github.com/gocolly/colly/v2"
-	"github.com/tebeka/selenium"
 	"hust-pass/config"
 	"hust-pass/ocr"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gocolly/colly/v2"
+	"github.com/tebeka/selenium"
 )
 
 var ocrResult string
@@ -100,6 +101,22 @@ func LoginGetElec(wd selenium.WebDriver) (string, error) {
 }
 
 func Login(wd selenium.WebDriver) error {
+	ch := make(chan bool)
+	go func() {
+		for {
+			_, err := wd.FindElement(selenium.ByCSSSelector, "#un")
+			if err != nil {
+				continue
+			}
+			ch <- true
+		}
+	}()
+	fmt.Println("开启go routine,等待登录页面加载...")
+	select {
+	case <-time.After(time.Second * 5):
+		return fmt.Errorf("找不到#un")
+	case <-ch:
+	}
 	elem, err := wd.FindElement(selenium.ByCSSSelector, "#un")
 	if err != nil {
 		return err
@@ -132,6 +149,7 @@ func Login(wd selenium.WebDriver) error {
 	if err != nil {
 		return err
 	}
+	ocrResult = ""
 	return nil
 }
 
