@@ -12,6 +12,13 @@
   "password": "统一身份系统密码",
   "chrome_driver_path": "chromedriver的路径",
   "caller_token": "调用OCR服务的token",
-  "ocr_service_port": 8754
+  "ocr_service_port": 8754,
+  "AmMeter_ID": "电费查询接口的AmMeter_ID",
+  "sms_app_id": "榛子云短信平台AppID",
+  "sms_app_secret": "榛子云短信平台AppSecret",
+  "sms_template_id": "榛子云短信平台短信模板ID",
+  "phone_number": "电话号码",
+  "room_id": "寝室号",
+  "elec_threshold": 30.0
 }
 ```
