@@ -3,13 +3,21 @@ package ocr
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/gocolly/colly/v2"
+	"hust-pass/config"
 	"image/gif"
 	"image/jpeg"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/imroc/req"
 )
+
+const GIFPath = "./captcha.gif"
+const JPEGPath = "./captcha.jpeg"
+
+var ocrResult string
 
 func WriteJPEG(gifPath string, JPEGPath string) error {
 	gifFile, err := os.Open(gifPath)
@@ -95,4 +103,56 @@ func GetImageString(imagePath string) (string, error) {
 	var coder = base64.NewEncoding(base64Table)
 	imgString := coder.EncodeToString(imageFile)
 	return imgString, nil
+}
+
+func OCR(jsid, ipPool string) (string, error) {
+	c := colly.NewCollector()
+	err := c.SetCookies("https://pass.hust.edu.cn", []*http.Cookie{
+		{
+			Name:   "JSESSIONID",
+			Value:  jsid,
+			Path:   "/",
+			Domain: "pass.hust.edu.cn",
+		},
+		{
+			Name:   "BIGipServerpool-icdc-cas2",
+			Value:  ipPool,
+			Path:   "/",
+			Domain: "pass.hust.edu.cn",
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	c.OnResponse(OCRCallback)
+	err = c.Visit("https://pass.hust.edu.cn/cas/code")
+	if err != nil {
+		return "", err
+	}
+	return ocrResult, nil
+}
+
+func OCRCallback(response *colly.Response) {
+	writeFile, err := os.OpenFile(GIFPath, os.O_SYNC|os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return
+	}
+	defer writeFile.Close()
+	_, err = writeFile.Write(response.Body)
+	if err != nil {
+		return
+	}
+	accessToken, err := GetAccessToken(config.GlobalConfig.AK, config.GlobalConfig.SK)
+	if err != nil {
+		return
+	}
+	err = WriteJPEG(GIFPath, JPEGPath)
+	if err != nil {
+		return
+	}
+	ocrResult, err = DigitalOCR(accessToken, JPEGPath)
+	fmt.Println("识别出验证码:" + ocrResult)
+	if err != nil {
+		return
+	}
 }
