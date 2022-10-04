@@ -1,0 +1,5 @@
+FROM selenium/standalone-chrome:latest
+COPY elec/elec_service/build_elec_query_service_linux docker/config.json /
+WORKDIR /
+RUN sudo mkdir "spider" && sudo cp /bin/chromedriver /spider/chromedriver.exe
+CMD sudo ./build_elec_query_service_linux

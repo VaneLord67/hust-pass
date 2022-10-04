@@ -13,5 +13,6 @@
   "sms_template_id": "",
   "phone_number": "",
   "room_id": "",
-  "elec_threshold": 30.0
+  "elec_threshold": 30.0,
+  "elec_query_service_port": 8725
 }

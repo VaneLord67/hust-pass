@@ -46,4 +46,5 @@ type Config struct {
 	PhoneNumber             string  `json:"phone_number"`
 	RoomID                  string  `json:"room_id"`
 	ElecThreshold           float64 `json:"elec_threshold"`
+	ElecQueryServicePort    int     `json:"elec_query_service_port"`
 }
