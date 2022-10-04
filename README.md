@@ -47,7 +47,7 @@
 # Docker镜像部署 HTTP服务
 ```shell
 1. docker pull vanelord/hust-pass:elec-v1
-2. docker run -itd --name hust-pass vanelord/hust-pass:elec-v1
+2. docker run -itd --name hust-pass -p ${配置文件中的elec_query_service_port}:${配置文件中的elec_query_service_port} vanelord/hust-pass:elec-v1
 3. 编写config.json，使用docker cp命令将config.json放到容器根目录下
 4. docker restart hust-pass
 5. docker logs -f hust-pass
