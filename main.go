@@ -15,7 +15,7 @@ func main() {
 	RetryTask()
 	log.Println("开启定时任务...")
 	crontab := cron.New()
-	_, err = crontab.AddFunc("0 0,8,16 * * *", RetryTask)
+	_, err = crontab.AddFunc("0 8,12,16 * * *", RetryTask)
 	if err != nil {
 		log.Fatal(err)
 		return
