@@ -8,6 +8,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -135,24 +136,34 @@ func OCR(jsid, ipPool string) (string, error) {
 func OCRCallback(response *colly.Response) {
 	writeFile, err := os.OpenFile(GIFPath, os.O_SYNC|os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
+		log.Println(err)
 		return
 	}
-	defer writeFile.Close()
+	defer func(writeFile *os.File) {
+		err := writeFile.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(writeFile)
 	_, err = writeFile.Write(response.Body)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	accessToken, err := GetAccessToken(config.GlobalConfig.AK, config.GlobalConfig.SK)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	err = WriteJPEG(GIFPath, JPEGPath)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	ocrResult, err = DigitalOCR(accessToken, JPEGPath)
 	fmt.Println("识别出验证码:" + ocrResult)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 }

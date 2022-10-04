@@ -32,6 +32,7 @@ func LoginGetElec(wd selenium.WebDriver) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		fmt.Println("进入电费查询网站")
 		err = wd.Get("http://sdhq.hust.edu.cn/icbs/hust/html/index.html")
 		if err != nil {
 			return "", err
@@ -58,7 +59,7 @@ func LoginGetElec(wd selenium.WebDriver) (string, error) {
 
 func Login(wd selenium.WebDriver, ocrResult string) error {
 	var usernameElement selenium.WebElement
-	_ = wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
+	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 		element, err := wd.FindElement(selenium.ByCSSSelector, "#un")
 		if err == nil {
 			usernameElement = element
@@ -66,7 +67,10 @@ func Login(wd selenium.WebDriver, ocrResult string) error {
 		}
 		return false, nil
 	}, time.Second*5)
-	err := usernameElement.SendKeys(config.GlobalConfig.Username)
+	if err != nil {
+		return err
+	}
+	err = usernameElement.SendKeys(config.GlobalConfig.Username)
 	if err != nil {
 		return err
 	}
