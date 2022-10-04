@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/robfig/cron/v3"
 	"hust-pass/config"
 	"hust-pass/elec"
@@ -32,7 +31,7 @@ func RetryTask() {
 		if err == nil {
 			break
 		}
-		fmt.Println("出错:", err.Error())
-		fmt.Println("重试...")
+		log.Println("出错:", err.Error())
+		log.Println("重试...")
 	}
 }

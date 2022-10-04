@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func LoadConfig() error {
 		return fmt.Errorf("解析配置文件异常，%s", err.Error())
 	}
 	if cfg.Username == "" {
-		fmt.Println("配置文件未修改，程序阻塞，请修改配置文件后重启程序")
+		log.Println("配置文件未修改，程序阻塞，请修改配置文件后重启程序")
 		for {
 			select {
 			case <-time.After(time.Hour * 1):

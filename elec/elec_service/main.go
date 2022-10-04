@@ -40,7 +40,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	fmt.Println("HTTP服务启动...")
+	log.Println("HTTP服务启动...")
 	http.HandleFunc("/elec_query", elecQueryHandler)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.GlobalConfig.ElecQueryServicePort), nil)
 	if err != nil {

@@ -68,7 +68,7 @@ func TestSpider(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(c.Cookies("https://pass.hust.edu.cn"))
+	log.Println(c.Cookies("https://pass.hust.edu.cn"))
 	loginResp, err := req.Post(
 		"https://pass.hust.edu.cn/cas/login?service=http%3A%2F%2Fone.hust.edu.cn%2Fdcp%2Findex.jsp",
 		req.Param{
@@ -85,7 +85,7 @@ func TestSpider(t *testing.T) {
 			"Cookie":       fmt.Sprintf("JSESSIONID=%s;BIGipServerpool-icdc-cas2=%s", jsid, ipPool),
 		},
 	)
-	fmt.Println(loginResp)
+	log.Println(loginResp)
 }
 
 func GetRSA(userName, password, lt string) (string, error) {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hust-pass/config"
+	"log"
 
 	"github.com/imroc/req"
 )
@@ -55,7 +56,7 @@ func (c *Client) Send(phoneNumber string, templateParams []string) error {
 	if sendRespBody.Code != 0 {
 		return fmt.Errorf("发送短信失败:%s", sendRespBody.Data)
 	}
-	fmt.Println("发送短信成功")
+	log.Println("发送短信成功")
 	return nil
 }
 

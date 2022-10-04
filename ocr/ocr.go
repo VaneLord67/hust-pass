@@ -161,7 +161,7 @@ func OCRCallback(response *colly.Response) {
 		return
 	}
 	ocrResult, err = DigitalOCR(accessToken, JPEGPath)
-	fmt.Println("识别出验证码:" + ocrResult)
+	log.Println("识别出验证码:" + ocrResult)
 	if err != nil {
 		log.Println(err)
 		return

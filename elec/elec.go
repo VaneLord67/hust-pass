@@ -1,7 +1,6 @@
 package elec
 
 import (
-	"fmt"
 	"github.com/tebeka/selenium"
 	"hust-pass/config"
 	"hust-pass/sms"
@@ -12,7 +11,7 @@ import (
 )
 
 func SpiderGetElecResult(wd selenium.WebDriver) (string, error) {
-	fmt.Println("进入电费查询网站")
+	log.Println("进入电费查询网站")
 	err := wd.Get("http://sdhq.hust.edu.cn/icbs/hust/html/index.html")
 	if err != nil {
 		return "", err
@@ -69,8 +68,8 @@ func GetElecResult() (string, error) {
 		log.Println("出错:", err)
 		return "", err
 	}
-	fmt.Println("电费:", elecResult)
-	fmt.Println("运行时长:", time.Now().Sub(now).Seconds())
+	log.Println("电费:", elecResult)
+	log.Println("运行时长:", time.Now().Sub(now).Seconds())
 	return elecResult, nil
 }
 
@@ -81,7 +80,7 @@ func Task() error {
 	}
 	elecNumber, err := strconv.ParseFloat(elec, 64)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	if elecNumber < config.GlobalConfig.ElecThreshold {
@@ -89,7 +88,7 @@ func Task() error {
 		err = client.Send(config.GlobalConfig.PhoneNumber,
 			[]string{config.GlobalConfig.RoomID, elec})
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return err
 		}
 	}

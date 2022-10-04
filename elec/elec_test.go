@@ -34,5 +34,5 @@ func TestElec(t *testing.T) {
 		log.Fatal(err)
 		return
 	}
-	fmt.Println(elecResp)
+	log.Println(elecResp)
 }
