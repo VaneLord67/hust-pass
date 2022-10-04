@@ -11,54 +11,33 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func LoginGetElec(wd selenium.WebDriver) (string, error) {
-	maxRetryCnt := 3
-	ocrResult := ""
-	for ; maxRetryCnt > 0; maxRetryCnt-- {
-		for maxRetryCnt := 5; len(ocrResult) != 4 && maxRetryCnt > 0; maxRetryCnt-- {
-			jsid, ipPool, err := GetJSIDAndIPPool(wd)
-			ocrResult, err = ocr.OCR(jsid, ipPool)
-			if err != nil {
-				return "", err
-			}
-		}
-		if len(ocrResult) != 4 {
-			log.Fatal("OCR出错次数过多")
-		}
-		err := Login(wd, ocrResult)
-		if err != nil {
-			return "", err
-		}
-		err = wd.Get("http://one.hust.edu.cn")
-		if err != nil {
-			return "", err
-		}
-		fmt.Println("进入电费查询网站")
-		err = wd.Get("http://sdhq.hust.edu.cn/icbs/hust/html/index.html")
-		if err != nil {
-			return "", err
-		}
-		var elecResult string
-		err = wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
-			elecValueElement, err := wd.FindElement(selenium.ByCSSSelector, ".AmValue")
-			if err != nil {
-				return false, nil
-			}
-			elecResult, err = elecValueElement.Text()
-			if err != nil {
-				return false, nil
-			}
-			return elecResult != "", nil
-		}, time.Second*30)
+func RetryLogin(wd selenium.WebDriver) error {
+	for maxRetryCnt := 3; maxRetryCnt > 0; maxRetryCnt-- {
+		err := Login(wd)
 		if err != nil {
 			continue
 		}
-		return elecResult, nil
+		err = wd.Get("http://one.hust.edu.cn")
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-	return "", fmt.Errorf("登录失败次数过多")
+	return fmt.Errorf("登录失败次数过多")
 }
 
-func Login(wd selenium.WebDriver, ocrResult string) error {
+func Login(wd selenium.WebDriver) error {
+	ocrResult := ""
+	for maxRetryCnt := 5; len(ocrResult) != 4 && maxRetryCnt > 0; maxRetryCnt-- {
+		jsid, ipPool, err := GetJSIDAndIPPool(wd)
+		ocrResult, err = ocr.OCR(jsid, ipPool)
+		if err != nil {
+			return err
+		}
+	}
+	if len(ocrResult) != 4 {
+		log.Fatal("OCR出错次数过多")
+	}
 	var usernameElement selenium.WebElement
 	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 		element, err := wd.FindElement(selenium.ByCSSSelector, "#un")

@@ -20,7 +20,8 @@
   "sms_template_id": "榛子云短信平台短信模板ID",
   "phone_number": "电话号码",
   "room_id": "寝室号",
-  "elec_threshold": 30.0
+  "elec_threshold": 30.0,
+  "elec_query_service_port": 8725
 }
 ```
 
@@ -34,11 +35,21 @@
 5. docker logs hust-pass # 查看日志
 ```
 
-# Docker镜像部署
+# Docker镜像部署 短信服务
 ```shell
 1. docker pull vanelord/hust-pass:v1
 2. docker run -itd --name hust-pass vanelord/hust-pass:v1
 3. 编写config.json，使用docker cp命令将config.json放到容器根目录下
 4. docker restart hust-pass
 5. docker logs -f hust-pass
+```
+
+# Docker镜像部署 HTTP服务
+```shell
+1. docker pull vanelord/hust-pass:elec-v1
+2. docker run -itd --name hust-pass vanelord/hust-pass:elec-v1
+3. 编写config.json，使用docker cp命令将config.json放到容器根目录下
+4. docker restart hust-pass
+5. docker logs -f hust-pass
+6. 使用GET http://localhost:${配置文件中的elec_query_service_port}/elec_query 访问服务
 ```

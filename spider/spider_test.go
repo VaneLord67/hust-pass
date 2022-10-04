@@ -3,6 +3,7 @@ package spider
 import (
 	"fmt"
 	"hust-pass/config"
+	"hust-pass/ocr"
 	"log"
 	"net/http"
 	"testing"
@@ -58,7 +59,7 @@ func TestSpider(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	c.OnResponse(OCRCallback)
+	c.OnResponse(ocr.OCRCallback)
 	err = c.Visit("https://pass.hust.edu.cn/cas/code")
 	if err != nil {
 		log.Fatal(err)
@@ -71,7 +72,7 @@ func TestSpider(t *testing.T) {
 	loginResp, err := req.Post(
 		"https://pass.hust.edu.cn/cas/login?service=http%3A%2F%2Fone.hust.edu.cn%2Fdcp%2Findex.jsp",
 		req.Param{
-			"code":      ocrResult,
+			"code":      "ocrResult",
 			"rsa":       rsa,
 			"ul":        10,
 			"pl":        11,
