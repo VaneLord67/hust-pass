@@ -1,0 +1,17 @@
+{
+  "ak": "",
+  "sk": "",
+  "chrome_driver_service_port": 8833,
+  "username": "",
+  "password": "",
+  "chrome_driver_path": "spider/chromedriver.exe",
+  "caller_token": "",
+  "ocr_service_port": 8754,
+  "AmMeter_ID": "",
+  "sms_app_id": "",
+  "sms_app_secret": "",
+  "sms_template_id": "",
+  "phone_number": "",
+  "room_id": "",
+  "elec_threshold": 30.0
+}

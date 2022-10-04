@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
 )
 
 var GlobalConfig *Config
@@ -16,6 +17,14 @@ func LoadConfig() error {
 	var cfg Config
 	if err := json.Unmarshal(bytes, &cfg); err != nil {
 		return fmt.Errorf("解析配置文件异常，%s", err.Error())
+	}
+	if cfg.Username == "" {
+		fmt.Println("配置文件未修改，程序阻塞，请修改配置文件后重启程序")
+		for {
+			select {
+			case <-time.After(time.Hour * 1):
+			}
+		}
 	}
 	GlobalConfig = &cfg
 	return nil

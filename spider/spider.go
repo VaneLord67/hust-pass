@@ -2,6 +2,7 @@ package spider
 
 import (
 	"fmt"
+	"github.com/tebeka/selenium/chrome"
 	"hust-pass/config"
 	"hust-pass/ocr"
 	"log"
@@ -28,69 +29,49 @@ func LoginGetElec(wd selenium.WebDriver) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		err = wd.Get("http://one.hust.edu.cn")
+		if err != nil {
+			return "", err
+		}
+		fmt.Println("进入电费查询网站")
 		err = wd.Get("http://sdhq.hust.edu.cn/icbs/hust/html/index.html")
 		if err != nil {
 			return "", err
 		}
-		title, err := wd.Title()
-		if err != nil {
-			return "", err
-		}
-		if title == "水电收费平台" {
-			break
-		}
-		fmt.Println("登录失败,重新登录...")
-		ocrResult = ""
-	}
-	if maxRetryCnt <= 0 {
-		return "", fmt.Errorf("登录失败次数过多")
-	}
-	log.Println("开启go routine,获取电费信息...")
-	ch := make(chan string)
-	go func() {
-		for {
+		var elecResult string
+		err = wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 			elecValueElement, err := wd.FindElement(selenium.ByCSSSelector, ".AmValue")
 			if err != nil {
-				continue
+				return false, nil
 			}
-			elecResult, err := elecValueElement.Text()
+			elecResult, err = elecValueElement.Text()
 			if err != nil {
-				continue
+				return false, nil
 			}
-			ch <- elecResult
+			return elecResult != "", nil
+		}, time.Second*30)
+		if err != nil {
+			continue
 		}
-	}()
-	select {
-	case <-time.After(time.Second * 5):
-		return "", fmt.Errorf("获取电费信息超时")
-	case elecResult := <-ch:
 		return elecResult, nil
 	}
+	return "", fmt.Errorf("登录失败次数过多")
 }
 
 func Login(wd selenium.WebDriver, ocrResult string) error {
-	ch := make(chan selenium.WebElement)
-	go func() {
-		var usernameElement selenium.WebElement
-		for {
-			element, err := wd.FindElement(selenium.ByCSSSelector, "#un")
-			if err == nil {
-				usernameElement = element
-				break
-			}
-			fmt.Println("找不到#un,重试...")
-		}
-		fmt.Println("找到#un")
-		ch <- usernameElement
-	}()
-	fmt.Println("开启go routine,等待登录页面加载...")
 	var usernameElement selenium.WebElement
-	select {
-	case <-time.After(time.Second * 5):
-		return fmt.Errorf("寻找#un超时")
-	case usernameElement = <-ch:
+	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
+		element, err := wd.FindElement(selenium.ByCSSSelector, "#un")
+		if err == nil {
+			usernameElement = element
+			return true, nil
+		}
+		return false, nil
+	}, time.Second*30)
+	if err != nil {
+		return err
 	}
-	err := usernameElement.SendKeys(config.GlobalConfig.Username)
+	err = usernameElement.SendKeys(config.GlobalConfig.Username)
 	if err != nil {
 		return err
 	}
@@ -141,4 +122,32 @@ func GetJSIDAndIPPool(wd selenium.WebDriver) (string, string, error) {
 		}
 	}
 	return jsid, ipPool, nil
+}
+
+func InitWebDriver() (selenium.WebDriver, error) {
+	//连接到本地运行的 WebDriver 实例
+	//这里的map键值只能为browserName，源码里需要获取这个键的值，来确定连接的是哪个浏览器
+	caps := selenium.Capabilities{"browserName": "chrome"}
+	//禁止图片加载，加快渲染速度
+	imagCaps := map[string]interface{}{
+		"profile.managed_default_content_settings.images": 2,
+	}
+	//设置实验谷歌浏览器驱动的参数
+	chromeCaps := chrome.Capabilities{
+		Prefs: imagCaps,
+		Args: []string{
+			"--headless", //设置Chrome无头模式
+		},
+	}
+	//添加浏览器设置参数
+	caps.AddChrome(chromeCaps)
+	//NewRemote 创建新的远程客户端，这也将启动一个新会话。 urlPrefix 是 Selenium 服务器的 URL，必须以协议 (http, https, ...) 为前缀。
+	//为urlPrefix提供空字符串会导致使用 DefaultURLPrefix,默认访问4444端口，
+	//所以最好自定义，避免端口已经被抢占。后面的路由还是照旧DefaultURLPrefix写
+	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub",
+		config.GlobalConfig.ChromeDriverServicePort))
+	if err != nil {
+		return nil, err
+	}
+	return wd, nil
 }
