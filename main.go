@@ -5,9 +5,12 @@ import (
 	"hust-pass/config"
 	"hust-pass/elec"
 	"log"
+	"time"
 )
 
 func main() {
+	var cstZone = time.FixedZone("CST", 8*3600) // 设置时区
+	time.Local = cstZone
 	err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
