@@ -116,7 +116,9 @@ func InitWebDriver() (selenium.WebDriver, error) {
 		Prefs: imagCaps,
 		Args: []string{
 			"--headless", //设置Chrome无头模式
+			"--no-sandbox",
 		},
+		W3C: true,
 	}
 	//添加浏览器设置参数
 	caps.AddChrome(chromeCaps)
